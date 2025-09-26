@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy_serializer import SerializerMixin
-from datetime import datetime, UTC  # ✅ Use UTC instead of utcnow()
+from datetime import datetime, timezone  # ✅ works on Python 3.8+
 
 # Naming convention to avoid migration issues
 metadata = MetaData(naming_convention={
@@ -17,11 +17,12 @@ class Message(db.Model, SerializerMixin):
     body = db.Column(db.String, nullable=False)
     username = db.Column(db.String, nullable=False)
 
-    # ✅ Store timezone-aware UTC datetimes
+    # ✅ timezone-aware datetime compatible with Python 3.8+
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(UTC),  
+        default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+
 
 
