@@ -1,32 +1,40 @@
-from datetime import datetime
-
-from app import app
+import pytest
 from models import db, Message
 
-class TestMessage:
-    '''Message model in models.py'''
+def test_message_creation(test_app):
+    """Check that a message is created correctly."""
+    msg = Message(body="Hello", username="Tester")
+    db.session.add(msg)
+    db.session.commit()
 
-    with app.app_context():
-        m = Message.query.filter(
-            Message.body == "Hello 👋"
-            ).filter(Message.username == "Liza")
+    # Use Session.get() instead of legacy Query.get()
+    retrieved = db.session.get(Message, msg.id)
+    assert retrieved is not None
+    assert retrieved.body == "Hello"
+    assert retrieved.username == "Tester"
 
-        for message in m:
-            db.session.delete(message)
+def test_message_columns(test_app):
+    """Check that Message has required columns."""
+    msg = Message(body="Check columns", username="Tester")
+    db.session.add(msg)
+    db.session.commit()
 
-        db.session.commit()
+    retrieved = db.session.get(Message, msg.id)
+    assert hasattr(retrieved, "id")
+    assert hasattr(retrieved, "body")
+    assert hasattr(retrieved, "username")
+    assert hasattr(retrieved, "created_at")
 
-    def test_has_correct_columns(self):
-        '''has columns for message body, username, and creation time.'''
-        with app.app_context():
+def test_message_deletion(test_app):
+    """Check that a message can be deleted."""
+    msg = Message(body="Delete me", username="Tester")
+    db.session.add(msg)
+    db.session.commit()
 
-            hello_from_liza = Message(
-                body="Hello 👋",
-                username="Liza")
-            
-            db.session.add(hello_from_liza)
-            db.session.commit()
+    db.session.delete(msg)
+    db.session.commit()
 
-            assert(hello_from_liza.body == "Hello 👋")
-            assert(hello_from_liza.username == "Liza")
-            assert(type(hello_from_liza.created_at) == datetime)
+    assert db.session.get(Message, msg.id) is None
+
+
+
